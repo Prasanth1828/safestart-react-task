@@ -2,6 +2,9 @@
 
 A professional, high-performance E-Commerce application built for the SafeStart Frontend Developer assessment. This project demonstrates modern React best practices, state management with Redux Toolkit, and a premium, responsive UI/UX.
 
+## 🌐 Live Demo
+**URL**: [https://safestart-react-task-f3y02h44d-prasanth1828s-projects.vercel.app/](https://safestart-react-task-f3y02h44d-prasanth1828s-projects.vercel.app/)
+
 ## 🚀 Features
 
 - **Authentication**: Secure login and signup flow with form validation.
