@@ -1,0 +1,50 @@
+[
+  {
+    "id": 1,
+    "name": "Quantum Pro Watch",
+    "price": 299,
+    "category": "Electronics",
+    "image": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=400",
+    "description": "Next-generation smart watch with holographic display."
+  },
+  {
+    "id": 2,
+    "name": "Nebula Headphones",
+    "price": 189,
+    "category": "Audio",
+    "image": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=400",
+    "description": "Immersive sound experience with active nebula noise cancellation."
+  },
+  {
+    "id": 3,
+    "name": "Aura Smart Lamp",
+    "price": 85,
+    "category": "Home",
+    "image": "https://images.unsplash.com/photo-1507413245164-6160d8298b31?auto=format&fit=crop&q=80&w=400",
+    "description": "Mood-syncing smart lamp with 16 million colors."
+  },
+  {
+    "id": 4,
+    "name": "Vortex Gaming Mouse",
+    "price": 120,
+    "category": "Accessories",
+    "image": "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&q=80&w=400",
+    "description": "Ultra-responsive gaming mouse with vortex optical sensors."
+  },
+  {
+    "id": 5,
+    "name": "Zenith Backpack",
+    "price": 75,
+    "category": "Lifestyle",
+    "image": "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&q=80&w=400",
+    "description": "Minimalist waterproof backpack for the modern traveler."
+  },
+  {
+    "id": 6,
+    "name": "Titan Mechanical Keyboard",
+    "price": 150,
+    "category": "Accessories",
+    "image": "https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?auto=format&fit=crop&q=80&w=400",
+    "description": "Tactile mechanical keyboard with programmable Titan switches."
+  }
+]

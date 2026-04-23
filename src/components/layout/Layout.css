@@ -1,0 +1,112 @@
+.layout-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+  margin-left: var(--sidebar-width);
+  padding: 2rem;
+  background-color: var(--bg-dark);
+}
+
+.page-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.top-nav {
+  height: var(--header-height);
+  display: flex;
+  align-items: center;
+  padding: 0 2.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background-color: rgba(9, 9, 11, 0.8);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+
+.top-nav-spacer {
+  flex: 1;
+}
+
+.cart-action-btn {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  transition: all 0.2s ease;
+}
+
+.cart-action-btn:hover {
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+}
+
+.cart-action-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background-color: var(--accent);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--bg-card);
+  box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.4);
+}
+
+.menu-toggle {
+  display: none;
+  background: none;
+  color: var(--text-main);
+  padding: 8px;
+  border-radius: 8px;
+}
+
+.sidebar-overlay {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .main-content {
+    margin-left: 0;
+    padding: 1rem;
+  }
+
+  .menu-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .top-nav {
+    padding: 0 1.5rem;
+  }
+
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 90;
+  }
+}
