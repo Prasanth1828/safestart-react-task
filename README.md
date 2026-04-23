@@ -1,16 +1,71 @@
-# React + Vite
+# SafeStart E-Commerce Assessment
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A professional, high-performance E-Commerce application built for the SafeStart Frontend Developer assessment. This project demonstrates modern React best practices, state management with Redux Toolkit, and a premium, responsive UI/UX.
 
-Currently, two official plugins are available:
+## 🚀 Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Authentication**: Secure login and signup flow with form validation.
+- **Product Catalog**: Dynamic product listing fetched from JSON data.
+- **Redux State Management**: Centralized user and cart state management.
+- **Shopping Cart**: Fully functional cart with add, remove, and quantity update features.
+- **Success Workflow**: Animated order success state with unique order ID generation.
+- **Responsive Design**: Mobile-first approach, fully optimized for all screen sizes.
+- **Performance**: Optimized with code-splitting (React.lazy) and custom hooks.
 
-## React Compiler
+## 🛠️ Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Core**: React 18 (Vite)
+- **State**: Redux Toolkit
+- **Routing**: React Router 6.4 (Data APIs)
+- **Animations**: Framer Motion
+- **Icons**: Lucide React
+- **Styling**: Vanilla CSS (CSS Variables & Modern Flexbox/Grid)
+- **Notifications**: React Hot Toast
 
-## Expanding the ESLint configuration
+## 🔑 Demo Credentials
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+To access the application, you can use the following default credentials:
+
+- **Email**: `admin@safestart.com` 
+- **Password**: `123456` 
+
+*Alternatively, you can use the Signup feature to create a new account.* 
+
+## 📦 Installation & Setup
+
+1. **Clone the repository**:
+   ```bash
+   git clone <repository-url>
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+3. **Run the development server**:
+   ```bash
+   npm run dev
+   ```
+
+4. **Build for production**:
+   ```bash
+   npm run build
+   ```
+
+5. **Preview the production build**:
+   ```bash
+   npm run preview
+   ```
+
+## 🏗️ Architecture Decisions
+
+- **Custom Hooks**: Encapsulated Redux logic into `useAuth` and `useCart` hooks for cleaner components and better reusability.
+- **Modular Components**: Split large pages into smaller, focused components (e.g., `ProductCard`, `CartItem`) for maintainability.
+- **Design System**: Used a cohesive color palette and global CSS variables for a consistent, premium look-and-feel.
+- **Data Persistence**: Implemented session management to ensure a smooth user experience during navigation.
+
+---
+
+**Candidate**: PRASANTH R  
+**Role**: Frontend Developer Assessment (SafeStart)
