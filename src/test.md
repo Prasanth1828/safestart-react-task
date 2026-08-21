@@ -1,176 +1,305 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { Box } from "@mui/material";
-import { connect, useDispatch } from "react-redux";
-import PropTypes from "prop-types";
-import { get } from "lodash";
-import OtpVerification from "../Accounts/components/OtpVerification";
+const VERSION = 1;
 
-import mapStateToProps from "../../components/Otp/selectors";
-import {
-  otpReset,
-  savePlatformAuthRequest,
-  sendOtpRequest,
-  updateOtpMobileNumber,
-} from "../../components/Otp/actions";
-import { verifyOtpCard } from "../Cards/action";
-import { VERIFY_OTP_CARD } from "../Cards/types";
+/**
+ * ============================================
+ * SECURE RANDOM
+ * ============================================
+ */
 
-const OtpAuthenticationHome = (props) => {
-  const { savePlatformAuthData, verifyOtpCardDetails, otpData, otpContext } = props;
+function secureRandom(max) {
+  const arr = new Uint32Array(1);
+  globalThis.crypto.getRandomValues(arr);
 
-  const sendOtpResponse = get(otpData, "sendOtp.response", null);
-  const sendOtpError = get(otpData, "sendOtp.error", null);
-  const sendOtpSuccess = get(sendOtpResponse, "success", false);
-  const otpAuthType = get(sendOtpResponse, "data.preference", "");
-  const mobileNumber = get(sendOtpResponse, "data.mobileNumber", "");
-  const { sourceApp, transactionId, customerId, journey, redirect } = otpContext || {};
-  const savePlatformAuthDetails = get(savePlatformAuthData, "response", {});
-  const savePlatformAuthApiError = get(savePlatformAuthData, "error", null);
+  return arr[0] % max;
+}
 
-  const savePlatformAuthSuccess = savePlatformAuthDetails?.responseMsg;
-  const savePlatformAuthCheckVal = savePlatformAuthDetails?.checkVal;
-  const dispatch = useDispatch();
+/**
+ * ============================================
+ * ENCRYPT
+ * ============================================
+ */
 
-  const [openOTP, setOpenOTP] = useState(false);
-  const [isProcessed, setIsProcessed] = useState(false);
-  const [authStatusRequested, setAuthStatusRequested] = useState(null);
+export function encodeText(text) {
+  // Text -> Bytes
+  const bytes = new TextEncoder().encode(text);
 
-  const verifyOtpSuccess = verifyOtpCardDetails?.data?.success;
-  const verifyOtpCardFailed = verifyOtpCardDetails?.data?.success === false;
+  // Random values
+  const shift = secureRandom(10) + 1;
+  const xorKey = secureRandom(256);
 
-  const triggerSavePlatformAuth = useCallback(
-    (status) => {
-      if (authStatusRequested) return;
-      setAuthStatusRequested(status);
-      dispatch(
-        savePlatformAuthRequest({
-          sourceApp,
-          authType: otpAuthType,
-          customerId,
-          status,
-          journey,
-          transactionId,
-        }),
-      );
-    },
-    [authStatusRequested, dispatch, sourceApp, otpAuthType, customerId, journey, transactionId],
-  );
+  // Rotate
+  const rotated = rotateLeft(bytes, shift);
 
-  // Handle Send OTP success or failure
-  // NOTE: Initial Redux state error is {} (empty object) — must check non-empty to avoid false trigger
-  useEffect(() => {
-    if (sendOtpSuccess) {
-      dispatch(updateOtpMobileNumber(mobileNumber));
-      setOpenOTP(true);
-    } else if (
-      (sendOtpError && Object.keys(sendOtpError).length > 0) ||
-      (sendOtpResponse && sendOtpResponse.success === false)
-    ) {
-      triggerSavePlatformAuth("fail");
-    }
-  }, [sendOtpSuccess, sendOtpError, sendOtpResponse, mobileNumber, dispatch, triggerSavePlatformAuth]);
+  // XOR
+  const xored = xorBytes(rotated, xorKey);
 
-  const handleVerifyOTP = () => {
-    dispatch(verifyOtpCard());
-  };
+  // Obfuscate with minimal junk
+  const obfuscated = obfuscate(xored);
 
-  // Resend OTP — same API as initial send (sendOtpRequest with Customer_Verify checkType)
-  const handleResendOTP = () => {
-    dispatch(
-      sendOtpRequest({
-        customerId,
-        mobileNumber: "",
-        email: "",
-        checkType: "Customer_Verify",
-        resendOtp: true,
-      }),
-    );
-  };
-
-  // Handle Verify OTP success
-  useEffect(() => {
-    if (verifyOtpSuccess) {
-      setOpenOTP(false);
-      dispatch({ type: VERIFY_OTP_CARD.CLEAR });
-      dispatch(otpReset());
-      triggerSavePlatformAuth("success");
-    }
-  }, [verifyOtpSuccess, dispatch, triggerSavePlatformAuth]);
-
-  // Handle Verify OTP failure
-  useEffect(() => {
-    if (verifyOtpCardFailed) {
-      setOpenOTP(false);
-      dispatch({ type: VERIFY_OTP_CARD.CLEAR });
-      dispatch(otpReset());
-      triggerSavePlatformAuth("fail");
-    }
-  }, [verifyOtpCardFailed, dispatch, triggerSavePlatformAuth]);
-
-  // After savePlatformAuthRequest API responds → notify parent window & close popup
-  // Initial Redux state: error = {} (empty), response = {} (empty) — wait for actual data
-  useEffect(() => {
-    const hasActualSuccess = savePlatformAuthSuccess || savePlatformAuthCheckVal;
-    // Distinguish real API error from initial empty {} state
-    const hasActualError =
-      savePlatformAuthApiError &&
-      Object.keys(savePlatformAuthApiError).length > 0;
-
-    if ((hasActualSuccess || hasActualError) && authStatusRequested && !isProcessed) {
-      setIsProcessed(true);
-      if (window.opener && !window.opener.closed) {
-        window.opener.postMessage(
-          {
-            type: "OTP_RESULT",
-            payload: {
-              success: authStatusRequested === "success",
-              checkVal: savePlatformAuthCheckVal || "",
-            },
-          },
-          redirect,
-        );
-      }
-      window.close();
-    }
-  }, [
-    savePlatformAuthSuccess,
-    savePlatformAuthCheckVal,
-    savePlatformAuthApiError,
-    authStatusRequested,
-    isProcessed,
-    redirect,
+  // Final payload
+  const payload = Uint8Array.from([
+    VERSION,
+    shift,
+    xorKey,
+    ...obfuscated,
   ]);
 
-  const handleCloseOTP = () => {
-    setOpenOTP(false);
-    dispatch(otpReset());
-    triggerSavePlatformAuth("fail");
-  };
+  // Base64URL instead of HEX
+  return bytesToBase64Url(payload);
+}
+
+/**
+ * ============================================
+ * DECRYPT
+ * ============================================
+ */
+
+export function decodeText(encodedString) {
+  // Base64URL -> Bytes
+  const data = base64UrlToBytes(encodedString);
+
+  let offset = 0;
+
+  // Version
+  const version = data[offset];
+  offset += 1;
+
+  if (version !== VERSION) {
+    throw new Error(`Unsupported version: ${version}`);
+  }
+
+  // Shift
+  const shift = data[offset];
+  offset += 1;
+
+  // XOR key
+  const xorKey = data[offset];
+  offset += 1;
+
+  // Remaining data
+  const obfuscated = data.slice(offset);
+
+  // Remove junk
+  const xored = deobfuscate(obfuscated);
+
+  // XOR again
+  const rotated = xorBytes(xored, xorKey);
+
+  // Rotate back
+  const original = rotateRight(rotated, shift);
+
+  // Bytes -> Text
+  return new TextDecoder().decode(original);
+}
+
+/**
+ * ============================================
+ * XOR
+ * ============================================
+ */
+
+function xorBytes(bytes, key) {
+  return Uint8Array.from(
+    bytes,
+    (b) => b ^ key
+  );
+}
+
+/**
+ * ============================================
+ * ROTATE
+ * ============================================
+ */
+
+function rotateLeft(bytes, shift) {
+  return Uint8Array.from(
+    bytes,
+    (b) => rotl8(b, shift)
+  );
+}
+
+function rotateRight(bytes, shift) {
+  return Uint8Array.from(
+    bytes,
+    (b) => rotr8(b, shift)
+  );
+}
+
+function rotl8(value, shift) {
+  const normalizedShift = shift & 7;
 
   return (
-    <Box className="platform-otp-container">
-      {openOTP && (
-        <OtpVerification
-          dialogOpen={openOTP}
-          onDialogClose={handleCloseOTP}
-          data={handleVerifyOTP}
-          checkType="OTP_GENERATE_REG"
-          otpJourney="Cards"
-          resend={handleResendOTP}
-          resendToken={handleResendOTP}
-          showCarousel={otpAuthType}
-          hideSMSCarousel={true}
-        />
-      )}
-    </Box>
+    (
+      (value << normalizedShift) |
+      (value >>> (8 - normalizedShift))
+    ) & 0xff
   );
-};
+}
 
-OtpAuthenticationHome.propTypes = {
-  verifyOtpCardDetails: PropTypes.any,
-  savePlatformAuthData: PropTypes.any,
-  otpContext: PropTypes.any,
-  otpData: PropTypes.object,
-};
+function rotr8(value, shift) {
+  const normalizedShift = shift & 7;
 
-export default connect(mapStateToProps)(OtpAuthenticationHome);
+  return (
+    (
+      (value >>> normalizedShift) |
+      (value << (8 - normalizedShift))
+    ) & 0xff
+  );
+}
+
+/**
+ * ============================================
+ * OBFUSCATION
+ *
+ * Junk: 0 or 1 byte only
+ * ============================================
+ */
+
+function obfuscate(source) {
+  const result = [];
+  let index = 0;
+
+  while (index < source.length) {
+    // Chunk size: 1 - 6
+    const chunkSize = Math.min(
+      source.length - index,
+      secureRandom(6) + 1
+    );
+
+    // Store chunk size
+    result.push(chunkSize);
+
+    // Store actual data
+    for (let i = 0; i < chunkSize; i += 1) {
+      result.push(source[index + i]);
+    }
+
+    index += chunkSize;
+
+    // Add minimal junk
+    if (index < source.length) {
+      // 0 or 1 junk byte
+      const junkLen = secureRandom(2);
+
+      result.push(junkLen);
+
+      for (let i = 0; i < junkLen; i += 1) {
+        result.push(secureRandom(256));
+      }
+    } else {
+      // End marker
+      result.push(0);
+    }
+  }
+
+  return Uint8Array.from(result);
+}
+
+/**
+ * ============================================
+ * DEOBFUSCATION
+ * ============================================
+ */
+
+function deobfuscate(data) {
+  const result = [];
+  let offset = 0;
+
+  while (offset < data.length) {
+    // Read chunk length
+    const chunkLen = data[offset];
+    offset += 1;
+
+    // Read actual data
+    for (let i = 0; i < chunkLen; i += 1) {
+      if (offset >= data.length) {
+        throw new Error("Invalid encoded data");
+      }
+
+      result.push(data[offset]);
+      offset += 1;
+    }
+
+    // Read junk length
+    if (offset >= data.length) {
+      break;
+    }
+
+    const junkLen = data[offset];
+    offset += 1;
+
+    // Skip junk
+    offset += junkLen;
+
+    if (offset > data.length) {
+      throw new Error("Invalid encoded data");
+    }
+  }
+
+  return Uint8Array.from(result);
+}
+
+/**
+ * ============================================
+ * BASE64URL ENCODING
+ * ============================================
+ */
+
+function bytesToBase64Url(bytes) {
+  let binary = "";
+
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
+  }
+
+  return btoa(binary)
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+}
+
+/**
+ * ============================================
+ * BASE64URL DECODING
+ * ============================================
+ */
+
+function base64UrlToBytes(value) {
+  // Base64URL -> Base64
+  const base64 = value
+    .replace(/-/g, "+")
+    .replace(/_/g, "/");
+
+  // Add padding
+  const padded = base64.padEnd(
+    base64.length + ((4 - (base64.length % 4)) % 4),
+    "="
+  );
+
+  const binary = atob(padded);
+
+  const bytes = new Uint8Array(binary.length);
+
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+
+  return bytes;
+
+ 
+}
+
+ const val =
+  "JkLe2uxeaRsvyBEauUrRhyoMC+4fEPOWLqg0HKpcXwezo5+vF+1FYxsoFAoh53fYPkogIQgZiTmZgnyQ3aDhNN4/HXnVFV1KfmriQu1W59Utn4+XBZQ=";
+
+console.log('val',val.length)
+const encrypted = encodeText(val);
+
+console.log("Encrypted:", encrypted);
+console.log("Encrypted:", encrypted.length);
+console.log('==================================')
+const decrypted = decodeText(encrypted);
+
+console.log("Decrypted:", decrypted);
+
+console.log("Match:", val === decrypted);
